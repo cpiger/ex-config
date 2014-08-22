@@ -189,7 +189,8 @@ function exconfig#apply()
     if vimentry#check('enable_cscope', 'true')
         call exconfig#gen_sh_update_cscope(g:exvim_folder)
         call excscope#set_csfile(g:exvim_folder.'/cscope.out')
-        silent call g:excs_connect_cscopefile()
+        " silent call g:excs_connect_cscopefile()
+        silent call excscope#connect()
     endif
 
     " macro highlight
@@ -462,7 +463,14 @@ function exconfig#gen_sh_update_ctags(path)
     endif
 
     " get ctags options
-    let ctags_optioins = '--fields=+iaS --extra=+q'
+    " let ctags_options = vimentry#get('ctags_options')
+    " if ctags_options == ''
+        if exists('g:ctags_options')
+            let ctags_options = g:ctags_options
+        else
+            let ctags_options = '--fields=+iaS --extra=+q'
+        endif
+    " endif
 
     " generate scripts
     if ex#os#is('windows')
@@ -475,7 +483,7 @@ function exconfig#gen_sh_update_ctags(path)
                     \ 'set DEST='.winpath                        ,
                     \ 'set TOOLS='.wintoolpath                   ,
                     \ 'set CTAGS_CMD='.ctags_cmd                 ,
-                    \ 'set OPTIONS='.ctags_optioins              ,
+                    \ 'set OPTIONS='.ctags_options              ,
                     \ 'set TMP=%DEST%\_tags'                     ,
                     \ 'set TARGET=%DEST%\tags'                   ,
                     \ 'call %TOOLS%\shell\batch\update-tags.bat' ,
@@ -487,7 +495,7 @@ function exconfig#gen_sh_update_ctags(path)
                     \ 'export DEST="'.a:path.'"'                   ,
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
                     \ 'export CTAGS_CMD="'.ctags_cmd.'"'           ,
-                    \ 'export OPTIONS="'.ctags_optioins.'"'        ,
+                    \ 'export OPTIONS="'.ctags_options.'"'        ,
                     \ 'export TMP="${DEST}/_tags"'                 ,
                     \ 'export TARGET="${DEST}/tags"'               ,
                     \ 'sh ${TOOLS}/shell/bash/update-tags.sh'      ,

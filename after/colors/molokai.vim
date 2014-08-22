@@ -1,7 +1,8 @@
 if &background == "dark"
     " NOTE: keep visual mode words still using its own syntax color  
     " hi Visual gui=NONE guifg=NONE guibg=#004b56
-    hi Visual               guibg=DarkGrey       gui=bold ctermbg=251  ctermfg=238 cterm=bold 
+    " hi Visual               guibg=DarkGrey       gui=bold ctermbg=251  ctermfg=238 cterm=bold 
+    hi Visual      guifg=Grey25          guibg=DarkGrey       gui=bold ctermbg=251  ctermfg=238 cterm=bold 
     " hi Visual      guifg=gray80         guibg=#445599        gui=none ctermfg=252 ctermbg=61 cterm=none
     " hi Visual term=reverse cterm=reverse guifg=#f6f3e8 guibg=#444444 
 
@@ -60,7 +61,8 @@ if &background == "dark"
 else
     " NOTE: keep visual mode words still using its own syntax color  
     " hi Visual gui=NONE guifg=NONE guibg=#ddd6c3
-    hi Visual               guibg=DarkGrey       gui=bold ctermbg=251  ctermfg=238 cterm=bold 
+    " hi Visual               guibg=DarkGrey       gui=bold ctermbg=251  ctermfg=238 cterm=bold 
+    hi Visual      guifg=Grey25          guibg=DarkGrey       gui=bold ctermbg=251  ctermfg=238 cterm=bold 
     " hi Visual      guifg=gray80         guibg=#445599        gui=none ctermfg=252 ctermbg=61 cterm=none
     " hi Visual term=reverse cterm=reverse guifg=#f6f3e8 guibg=#444444 
     " ex
