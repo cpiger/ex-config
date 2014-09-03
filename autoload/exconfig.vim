@@ -187,10 +187,9 @@ function exconfig#apply()
 
     " set cscope file path
     if vimentry#check('enable_cscope', 'true')
-        call exconfig#gen_sh_update_cscope(g:exvim_folder)
         call excscope#set_csfile(g:exvim_folder.'/cscope.out')
-        " silent call g:excs_connect_cscopefile()
-        silent call excscope#connect()
+        call exconfig#gen_sh_update_cscope(g:exvim_folder)
+        call excscope#connect()
     endif
 
     " macro highlight
@@ -200,14 +199,15 @@ function exconfig#apply()
 
     " buffer restore
     if vimentry#check('enable_restore_bufs', 'true')
-        if vimentry#is_first_time()
             call ex#set_restore_info(g:exvim_folder.'/restore_info')
-            call ex#restore_lasteditbuffers()
 
             augroup ex_restore_info
                 au! VimLeave * call ex#save_restore_info ()
             augroup END
-        endif
+    else
+        augroup ex_restore_info
+            au!
+        augroup END
     endif
 
 
@@ -228,14 +228,6 @@ function exconfig#apply()
     "     endif
     "   endfor
     " endif
-
-    " ===================================
-    " run customized scripts
-    " ===================================
-
-    if exists('*g:exvim_post_init')
-        call g:exvim_post_init()
-    endif
 
     " ===================================
     " layout windows
@@ -346,6 +338,22 @@ function exconfig#apply()
             call ex#window#goto_edit_window()
         endif
     endif
+
+    " ===================================
+    " post
+    " ===================================
+
+    " do buffer restore
+    if vimentry#check('enable_restore_bufs', 'true')
+        if vimentry#is_first_time()
+            call ex#restore_lasteditbuffers()
+        endif
+    endif
+
+    " run customized scripts
+    if exists('*g:exvim_post_init')
+        call g:exvim_post_init()
+    endif
 endfunction
 
 " exconfig#gen_sh_update_files {{{
@@ -434,7 +442,7 @@ function exconfig#gen_sh_update_files(path)
                     \ 'export FILE_SUFFIXS="'.file_pattern.'"'     ,
                     \ 'export TMP="${DEST}/_files"'                ,
                     \ 'export TARGET="${DEST}/files"'              ,
-                    \ 'sh ${TOOLS}/shell/bash/update-filelist.sh'  ,
+                    \ 'sh ${TOOLS}/shell/bash/update-filelist.sh' ,
                     \ ]
     endif
 
@@ -498,7 +506,7 @@ function exconfig#gen_sh_update_ctags(path)
                     \ 'export OPTIONS="'.ctags_options.'"'        ,
                     \ 'export TMP="${DEST}/_tags"'                 ,
                     \ 'export TARGET="${DEST}/tags"'               ,
-                    \ 'sh ${TOOLS}/shell/bash/update-tags.sh'      ,
+                    \ 'source ${TOOLS}/shell/bash/update-tags.sh'  ,
                     \ ]
     endif
 
@@ -536,7 +544,20 @@ function exconfig#gen_sh_update_cscope(path)
 
     " generate scripts
     if ex#os#is('windows')
-        call ex#warning("TODO: not implement")
+        let fullpath = a:path . '/update-cscope.bat'
+        let winpath = ex#path#translate(a:path,'windows')
+        let wintoolpath = ex#path#translate(g:ex_tools_path,'windows')
+        let wintoolpath = expand(wintoolpath)
+        let scripts = [
+                    \ '@echo off'                                  ,
+                    \ 'set DEST='.winpath                          ,
+                    \ 'set TOOLS='.wintoolpath                     ,
+                    \ 'set CSCOPE_CMD='.cscope_cmd                   ,
+                    \ 'set OPTIONS='.cscope_optioins                ,
+                    \ 'set TMP=%DEST%\_cscope.out'                 ,
+                    \ 'set TARGET=%DEST%\cscope.out'               ,
+                    \ 'call %TOOLS%\shell\batch\update-cscope.bat' ,
+                    \ ]
     else
         let fullpath = a:path . '/update-cscope.sh'
         let scripts = [
@@ -545,9 +566,9 @@ function exconfig#gen_sh_update_cscope(path)
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
                     \ 'export CSCOPE_CMD="'.cscope_cmd.'"'         ,
                     \ 'export OPTIONS="'.cscope_optioins.'"'        ,
-                    \ 'export TMP="./cscope.out"'                 ,
+                    \ 'export TMP="${DEST}/_cscope.out"'           ,
                     \ 'export TARGET="${DEST}/cscope.out"'               ,
-                    \ 'sh ${TOOLS}/shell/bash/update-cscope.sh'      ,
+                    \ 'source ${TOOLS}/shell/bash/update-cscope.sh',
                     \ ]
     endif
 
@@ -584,7 +605,7 @@ function exconfig#gen_sh_update_symbols(path)
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
                     \ 'export TMP="${DEST}/_symbols"'              ,
                     \ 'export TARGET="${DEST}/symbols"'            ,
-                    \ 'sh ${TOOLS}/shell/bash/update-symbols.sh'   ,
+                    \ 'source ${TOOLS}/shell/bash/update-symbols.sh' ,
                     \ ]
     endif
 
@@ -621,7 +642,7 @@ function exconfig#gen_sh_update_inherits(path)
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
                     \ 'export TMP="${DEST}/_inherits"'              ,
                     \ 'export TARGET="${DEST}/inherits"'            ,
-                    \ 'sh ${TOOLS}/shell/bash/update-inherits.sh'   ,
+                    \ 'source ${TOOLS}/shell/bash/update-inherits.sh' ,
                     \ ]
     endif
 
@@ -645,6 +666,7 @@ let s:default_id_file_filter = [
             \ 'pl', 'pm',
             \ 'vim',
             \ 'html', 'htm', 'shtml', 'stm',
+    \ 'css', 'sass', 'scss', 'less', 'styl',
             \ 'xml', 'mms', 'glm',
             \ 'json',
             \ 'l', 'lex', 'y', 'yacc',
@@ -690,7 +712,7 @@ function exconfig#gen_sh_update_idutils(path)
                     \ 'export EXCLUDE_FOLDERS="'.exclude_folders.'"' ,
                     \ 'export TMP="${DEST}/_ID"'                     ,
                     \ 'export TARGET="${DEST}/ID"'                   ,
-                    \ 'sh ${TOOLS}/shell/bash/update-idutils.sh'     ,
+                    \ 'source ${TOOLS}/shell/bash/update-idutils.sh' ,
                     \ ]
     endif
 
@@ -751,8 +773,12 @@ function exconfig#gen_sh_update_idutils(path)
         silent call add ( scripts, '*.'.item.'    text')
     endfor
 
+    let scriptText = join(scripts, "\n") 
+    if ex#os#is('windows')
+        let scriptText = substitute(scriptText , '\/', '\\\\', 'g')
+    endif
     " save to file
-    call writefile( scripts, fullpath, 'b' )
+    call writefile( split(scriptText, "\n") , fullpath, 'b' )
 endfunction
 
 " exconfig#update_exvim_files {{{
