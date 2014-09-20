@@ -83,62 +83,6 @@ function exconfig#apply()
         " let project_types = split( vimentry#get('project_type'), ',' )
     endif
 
-    " TODO: DELME { currently exconfig#gen_sh_update_idutils still use this
-    " set folder filter to g:exvim_root_folders and g:exvim_root_exclude_folders
-    let folder_filter = copy(vimentry#get('folder_filter', []))
-    let g:exvim_root_folders = []
-    let g:exvim_root_exclude_folders = []
-
-    if !empty(folder_filter)
-        " we need search the root directory, and add folders that not excluded
-        if vimentry#check('folder_filter_mode', 'exclude')
-            " set include folders
-            let filelist = split(globpath(cwd,'*'),'\n')
-            for name in filelist
-                if isdirectory(name)
-                    let name = fnamemodify(name,':t')
-                    if index( folder_filter, name ) == -1
-                        silent call add ( g:exvim_root_folders, name )
-                    endif
-                endif
-            endfor
-
-            " set exclude folders
-            for name in folder_filter
-                if isdirectory(name)
-                    silent call add ( g:exvim_root_exclude_folders, name )
-                endif
-            endfor
-        else
-            " set include folders
-            for name in folder_filter
-                if isdirectory(name)
-                    silent call add ( g:exvim_root_folders, name )
-                endif
-            endfor
-
-            " set exclude folders
-            let filelist = split(globpath(cwd,'*'),'\n')
-            for name in filelist
-                if isdirectory(name)
-                    let name = fnamemodify(name,':t')
-                    if index( folder_filter, name ) == -1
-                        silent call add ( g:exvim_root_exclude_folders, name )
-                    endif
-                endif
-            endfor
-        endif
-    else
-        let filelist = split(globpath(cwd,'*'),'\n')
-        for name in filelist
-            if isdirectory(name)
-                let name = fnamemodify(name,':t')
-                silent call add ( g:exvim_root_folders, name )
-            endif
-        endfor
-    endif
-    " TODO: DELME }
-
     " Building
     let builder = vimentry#get('builder')
     let build_opt = vimentry#get('build_opt')
@@ -366,35 +310,30 @@ function exconfig#gen_sh_update_files(path)
             call ex#warning("Can't find gawk command in your system. Please install it first!")
         endif
 
-        let folder_pattern = ""
-        let use_folder_pattern = 0
-        for name in g:exvim_root_folders
-            let folder_pattern .= '"' . name . '",'
-        endfor
-        if !empty(g:exvim_root_folders)
-            let use_folder_pattern = 1
-            let folder_pattern = strpart( folder_pattern, 0, len(folder_pattern) - 1)
+        let gawk_suffix = 'exc'
+        if vimentry#check('folder_filter_mode', 'include')
+            let gawk_suffix = 'inc'
+        endif
+
+        let folder_filter = vimentry#get('folder_filter', [])
+        let folder_pattern_gawk = ''
+        if !empty(folder_filter)
+            for name in folder_filter
+                let folder_pattern_gawk .= '.*\\\\'.name.'\\\\.*|'
+            endfor
+            let folder_pattern_gawk = strpart( folder_pattern_gawk, 0, len(folder_pattern_gawk) - 1)
         endif
 
         let file_pattern = ''
-        let file_filters = vimentry#get('file_filter', [])
-        if !empty(file_filters)
-            for name in file_filters
-                let file_pattern .= '*.' . toupper(name) . ' '
-            endfor
-        else
-            let file_pattern=''
-        endif
-
         let file_pattern_gawk = ''
         let file_filters = vimentry#get('file_filter', [])
         if !empty(file_filters)
             for name in file_filters
-                let file_pattern_gawk .= '\\.' . name . '$|'
+                let file_pattern .= '*.' . toupper(name) . ' '
+                let file_pattern_gawk .= '\\\\.' . name . '$|'
             endfor
+            let file_pattern = strpart( file_pattern, 0, len(file_pattern) - 1)
             let file_pattern_gawk = strpart( file_pattern_gawk, 0, len(file_pattern_gawk) - 1)
-        else
-            let file_pattern_gawk=''
         endif
 
         let fullpath = a:path . '/update-filelist.bat'
@@ -405,47 +344,62 @@ function exconfig#gen_sh_update_files(path)
                     \ '@echo off'                                       ,
                     \ 'set DEST='.winpath                               ,
                     \ 'set TOOLS='.wintoolpath                          ,
-                    \ 'set FOLDERS='.folder_pattern                     ,
-                    \ 'set USE_FOLDERS='.use_folder_pattern             ,
                     \ 'set FILE_SUFFIXS='.file_pattern                  ,
+                    \ 'set GAWK_SUFFIX='.gawk_suffix                        ,
                     \ 'set FILE_FILTER_PATTERN="'.file_pattern_gawk.'"' ,
+                    \ 'set FOLDER_FILTER_PATTERN="'.folder_pattern_gawk.'"' ,
                     \ 'set TMP=%DEST%\_files_gawk'                      ,
                     \ 'set TMP2=%DEST%\_files'                          ,
                     \ 'set TARGET=%DEST%\files'                         ,
+                    \ 'set ID_TARGET="%DEST%\idutils-files"'                ,
                     \ 'call %TOOLS%\shell\batch\update-filelist.bat'    ,
                     \ ]
     else
-        " DELME:
+        " DISABLE
+        " let gawk_suffix = 'exc'
+        " if vimentry#check('folder_filter_mode', 'include')
+        "     let gawk_suffix = 'inc'
+        " endif
+        " let folder_pattern_gawk = ''
+        " if !empty(folder_filter)
+        "     for name in folder_filter
+        "         let folder_pattern_gawk .= '.*\\\/'.name.'\\\/.*|'
+        "     endfor
+        "     let folder_pattern_gawk = strpart( folder_pattern_gawk, 0, len(folder_pattern_gawk) - 1)
+        " endif
+        " let file_pattern_gawk = ''
+        " if !empty(file_filters)
+        "     for name in file_filters
+        "         let file_pattern_gawk .= '\\\\.' . name . '$|'
+        "     endfor
+        "     let file_pattern_gawk = strpart( file_pattern_gawk, 0, len(file_pattern_gawk) - 1)
+        " endif
+        " \ 'export GAWK_SUFFIX='.gawk_suffix                         ,
+        " \ 'export FILE_FILTER_PATTERN="'.file_pattern_gawk.'"'      ,
+        " \ 'export FOLDER_FILTER_PATTERN="'.folder_pattern_gawk.'"'  ,
+
+        let exclude = '-not'
+        if vimentry#check('folder_filter_mode', 'include')
+            let exclude = ''
+        endif
+
+        let folder_filter = vimentry#get('folder_filter', [])
         let folder_pattern = ''
-        for name in g:exvim_root_folders
-            let folder_pattern .= './' . name . ','
-        endfor
-        if !empty(g:exvim_root_folders)
+        if !empty(folder_filter)
+            for name in folder_filter
+                let folder_pattern .= substitute(name, "\+", "\\\\+", "g") . '|'
+            endfor
             let folder_pattern = strpart( folder_pattern, 0, len(folder_pattern) - 1)
         endif
 
-        " TODO:
-        " let folder_filter = vimentry#get('folder_filter', [])
-        " let folder_pattern = ''
-        " if vimentry#check('folder_filter_mode', 'exclude')
-        "     for name in folder_filter
-        "         let folder_pattern .= -not -path '"*/'.name.'/*"'
-        "     endfor
-        " else
-        "     for name in folder_filter
-        "         let folder_pattern .= -path '"*/'.name.'/*"'
-        "     endfor
-        " endif
-
-        let file_pattern = ''
+        let file_pattern = '.*'
         let file_filters = vimentry#get('file_filter', [])
         if !empty(file_filters)
+            let file_pattern = ''
             for name in file_filters
-                let file_pattern .= substitute(name, "\+", "\\\\+", "g") . '|'
+                let file_pattern .= name . '|'
             endfor
             let file_pattern = strpart( file_pattern, 0, len(file_pattern) - 1)
-        else
-            let file_pattern='.*'
         endif
 
         let fullpath = a:path . '/update-filelist.sh'
@@ -453,10 +407,12 @@ function exconfig#gen_sh_update_files(path)
                     \ '#!/bin/bash'                                ,
                     \ 'export DEST="'.a:path.'"'                   ,
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
+                    \ 'export IS_EXCLUDE='.exclude                 ,
                     \ 'export FOLDERS="'.folder_pattern.'"'        ,
                     \ 'export FILE_SUFFIXS="'.file_pattern.'"'     ,
                     \ 'export TMP="${DEST}/_files"'                ,
                     \ 'export TARGET="${DEST}/files"'              ,
+                    \ 'export ID_TARGET="${DEST}/idutils-files"'   ,
                     \ 'sh ${TOOLS}/shell/bash/update-filelist.sh' ,
                     \ ]
     endif
@@ -521,7 +477,7 @@ function exconfig#gen_sh_update_ctags(path)
                     \ 'export OPTIONS="'.ctags_options.'"'        ,
                     \ 'export TMP="${DEST}/_tags"'                 ,
                     \ 'export TARGET="${DEST}/tags"'               ,
-                    \ 'source ${TOOLS}/shell/bash/update-tags.sh'  ,
+                    \ 'sh ${TOOLS}/shell/bash/update-tags.sh'      ,
                     \ ]
     endif
 
@@ -583,7 +539,7 @@ function exconfig#gen_sh_update_cscope(path)
                     \ 'export OPTIONS="'.cscope_optioins.'"'        ,
                     \ 'export TMP="${DEST}/_cscope.out"'           ,
                     \ 'export TARGET="${DEST}/cscope.out"'               ,
-                    \ 'source ${TOOLS}/shell/bash/update-cscope.sh',
+                    \ 'sh ${TOOLS}/shell/bash/update-cscope.sh'    ,
                     \ ]
     endif
 
@@ -620,7 +576,7 @@ function exconfig#gen_sh_update_symbols(path)
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
                     \ 'export TMP="${DEST}/_symbols"'              ,
                     \ 'export TARGET="${DEST}/symbols"'            ,
-                    \ 'source ${TOOLS}/shell/bash/update-symbols.sh' ,
+                    \ 'sh ${TOOLS}/shell/bash/update-symbols.sh'   ,
                     \ ]
     endif
 
@@ -657,7 +613,7 @@ function exconfig#gen_sh_update_inherits(path)
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
                     \ 'export TMP="${DEST}/_inherits"'              ,
                     \ 'export TARGET="${DEST}/inherits"'            ,
-                    \ 'source ${TOOLS}/shell/bash/update-inherits.sh' ,
+                    \ 'sh ${TOOLS}/shell/bash/update-inherits.sh'  ,
                     \ ]
     endif
 
@@ -693,18 +649,76 @@ function exconfig#gen_sh_update_idutils(path)
         call ex#warning("Can't find mkid command in your system. Please install it first!")
     endif
 
+    " generate scripts
+    if ex#os#is('windows')
+
+        " TODO: DELME { currently exconfig#gen_sh_update_idutils still use this
+        " set folder filter to exvim_root_folders and exvim_root_exclude_folders
+        let folder_filter = copy(vimentry#get('folder_filter', []))
+        let exvim_root_folders = []
+        let exvim_root_exclude_folders = []
+        let cwd = g:exvim_project_root
+
+        if !empty(folder_filter)
+            " we need search the root directory, and add folders that not excluded
+            if vimentry#check('folder_filter_mode', 'exclude')
+                " set include folders
+                let filelist = split(globpath(cwd,'*'),'\n')
+                for name in filelist
+                    if isdirectory(name)
+                        let name = fnamemodify(name,':t')
+                        if index( folder_filter, name ) == -1
+                            silent call add ( exvim_root_folders, name )
+                        endif
+                    endif
+                endfor
+
+                " set exclude folders
+                for name in folder_filter
+                    if isdirectory(name)
+                        silent call add ( exvim_root_exclude_folders, name )
+                    endif
+                endfor
+            else
+                " set include folders
+                for name in folder_filter
+                    if isdirectory(name)
+                        silent call add ( exvim_root_folders, name )
+                    endif
+                endfor
+
+                " set exclude folders
+                let filelist = split(globpath(cwd,'*'),'\n')
+                for name in filelist
+                    if isdirectory(name)
+                        let name = fnamemodify(name,':t')
+                        if index( folder_filter, name ) == -1
+                            silent call add ( exvim_root_exclude_folders, name )
+                        endif
+                    endif
+                endfor
+            endif
+        else
+            let filelist = split(globpath(cwd,'*'),'\n')
+            for name in filelist
+                if isdirectory(name)
+                    let name = fnamemodify(name,':t')
+                    silent call add ( exvim_root_folders, name )
+                endif
+            endfor
+        endif
+
     " get exclude folder filter options
     " NOTE: this mkid have bug that if a folder name has white space, --prune="foo bar" will treat it as two folder.
     let exclude_folders = ''
-    for name in g:exvim_root_exclude_folders
+        for name in exvim_root_exclude_folders
         let exclude_folders .= name . ' '
     endfor
-    if !empty(g:exvim_root_folders)
+        if !empty(exvim_root_folders)
         let exclude_folders = strpart( exclude_folders, 0, len(exclude_folders) - 1)
     endif
+        " TODO: DELME }
 
-    " generate scripts
-    if ex#os#is('windows')
         let fullpath = a:path . '/update-idutils.bat'
         let winpath = ex#path#translate(a:path,'windows')
         let wintoolpath = ex#path#translate(g:ex_tools_path,'windows')
@@ -724,10 +738,9 @@ function exconfig#gen_sh_update_idutils(path)
                     \ '#!/bin/bash'                                  ,
                     \ 'export DEST="'.a:path.'"'                     ,
                     \ 'export TOOLS="'.expand(g:ex_tools_path).'"'   ,
-                    \ 'export EXCLUDE_FOLDERS="'.exclude_folders.'"' ,
                     \ 'export TMP="${DEST}/_ID"'                     ,
                     \ 'export TARGET="${DEST}/ID"'                   ,
-                    \ 'source ${TOOLS}/shell/bash/update-idutils.sh' ,
+                    \ 'sh ${TOOLS}/shell/bash/update-idutils.sh'   ,
                     \ ]
     endif
 
@@ -756,6 +769,7 @@ function exconfig#gen_sh_update_idutils(path)
                 \ '*.min.js              IGNORE',
                 \ ]
 
+    " NOTE: no used at all. id-utils can not ignore folder
     " set folder_filter exclude
     if vimentry#check('folder_filter_mode', 'exclude')
         let ignore_folders = vimentry#get('folder_filter',[])
