@@ -352,6 +352,7 @@ function exconfig#gen_sh_update_files(path)
                     \ 'set TMP2=%DEST%\_files'                          ,
                     \ 'set TARGET=%DEST%\files'                         ,
                     \ 'set ID_TARGET="%DEST%\idutils-files"'                ,
+                    \ 'set FTAG_TARGET="%DEST%\filenametags"'                ,
                     \ 'call %TOOLS%\shell\batch\update-filelist.bat'    ,
                     \ ]
     else
@@ -413,6 +414,7 @@ function exconfig#gen_sh_update_files(path)
                     \ 'export TMP="${DEST}/_files"'                ,
                     \ 'export TARGET="${DEST}/files"'              ,
                     \ 'export ID_TARGET="${DEST}/idutils-files"'   ,
+                    \ 'export FTAG_TARGET="${DEST}/filenametags"'   ,
                     \ 'sh ${TOOLS}/shell/bash/update-filelist.sh' ,
                     \ ]
     endif
@@ -857,6 +859,7 @@ function exconfig#update_exvim_files()
 
     " update cscope
     if vimentry#check('enable_cscope','true')
+        call excscope#kill()
         let cmd .= and
         let cmd .= shell_exec . ' ' . path.'update-cscope'.suffix
         let and = shell_and
@@ -865,6 +868,11 @@ function exconfig#update_exvim_files()
     let cmd .= shell_pause
     call ex#hint('exVim Updating...')
     exec '!' . cmd
+
+    if vimentry#check('enable_cscope','true')
+        call excscope#connect()
+    endif
+
     call ex#hint('exVim Update Finish!')
 endfunction
 
