@@ -61,6 +61,11 @@ if &background == "dark"
     hi MBEVisibleChanged ctermfg=Black ctermbg=DarkRed guifg=Black guibg=DarkRed
     hi MBEVisibleActiveNormal term=bold cterm=bold ctermfg=245 ctermbg=235 gui=bold guifg=#073642 guibg=#93a1a1
     hi MBEVisibleActiveChanged term=bold cterm=bold ctermfg=Black ctermbg=Red gui=bold guifg=Black guibg=#dc322f
+
+    " better whitespace highlight
+    " =============================
+    hi clear ExtraWhitespace
+    hi link ExtraWhitespace ErrorMsg
 else
     " NOTE: keep visual mode words still using its own syntax color  
     hi Visual gui=NONE guifg=NONE guibg=#ddd6c3
@@ -124,6 +129,11 @@ else
     hi MBEVisibleChanged ctermfg=Black ctermbg=DarkRed guifg=Black guibg=#dc322f
     hi MBEVisibleActiveNormal term=bold cterm=bold ctermfg=245 ctermbg=235 gui=bold guifg=#eee8d5 guibg=#586e75
     hi MBEVisibleActiveChanged term=bold cterm=bold ctermfg=Black ctermbg=Red gui=bold guifg=Black guibg=DarkRed
+
+    " better whitespace highlight
+    " =============================
+    hi clear ExtraWhitespace
+    hi link ExtraWhitespace ErrorMsg
 endif
 
 " vim:ts=4:sw=4:sts=4 et fdm=marker:

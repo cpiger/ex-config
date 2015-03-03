@@ -89,7 +89,7 @@ function exconfig#apply()
     call exqfix#set_compiler(builder)
     call exqfix#set_qfix_file(g:exvim_folder.'/errors.qfix')
 
-    if mapcheck('<leader>bb','n') != ""
+    if maparg('<leader>bb','n') != ""
         nunmap <leader>bb
     endif
     let build_cmd = ":call exqfix#build('".build_opt."')<CR>"
@@ -156,6 +156,34 @@ function exconfig#apply()
         augroup END
     endif
 
+    " custom ctrlp ignores
+    let file_pattern = ''
+    " let file_suffixs = vimentry#get('file_filter',[])
+    " if len(file_suffixs) > 0
+    "     for suffix in file_suffixs
+    "         let file_pattern .= suffix . '|' 
+    "     endfor
+    "     let file_pattern = '\v\.(' . file_pattern , ')$' 
+    " endif
+
+    let dir_pattern = ''
+    if vimentry#check( 'folder_filter_mode',  'exclude' )
+        let folders = vimentry#get('folder_filter',[])
+        if len(folders) > 0
+            for folder in folders
+                let dir_pattern .= folder . '|' 
+            endfor
+            let dir_pattern = strpart( dir_pattern, 0, len(dir_pattern) - 1)
+
+            let dir_pattern = '\v[\/](' . dir_pattern . ')$' 
+        endif
+    endif
+
+    let g:ctrlp_custom_ignore = {
+                \ 'dir': dir_pattern,
+                \ 'file': file_pattern,
+                \ }
+
 
     " TODO:
     " " set vimentry references
@@ -205,19 +233,19 @@ function exconfig#apply()
             " TODO: add dirty message in ex-project window and hint user to press \R for refresh
 
             " bind key mapping
-            if mapcheck('<leader>fc','n') != ""
+            if maparg('<leader>fc','n') != ""
                 nunmap <leader>fc
             endif
             call exproject#register_hotkey( 100, 0, '<leader>fc', ":EXProjectFind<CR>", 'Find current edit buffer in project window.' )
 
             if has('gui_running')
                 if has ('mac')
-                    if mapcheck('Ø','n') != ""
+                    if maparg('Ø','n') != ""
                         nunmap Ø
                     endif
                     call exproject#register_hotkey( 101, 0, 'Ø', ":EXProjectOpen<CR>:redraw<CR>/", 'Open project window and stay in search mode.' )
                 else
-                    if mapcheck('<M-O>','n') != ""
+                    if maparg('<M-O>','n') != ""
                         nunmap <M-O>
                     endif
                     call exproject#register_hotkey( 101, 0, '<M-O>', ":EXProjectOpen<CR>:redraw<CR>/", 'Open project window and stay in search mode.' )
@@ -245,7 +273,7 @@ function exconfig#apply()
 
             if vimentry#check( 'folder_filter_mode',  'exclude' )
                 let folder_filter = vimentry#get('folder_filter')
-                if folder_filter == type([])
+                if type(folder_filter) == type([])
                     for pattern in folder_filter
                         silent call add ( g:NERDTreeIgnore, pattern.'[[dir]]' )
                     endfor
@@ -253,19 +281,19 @@ function exconfig#apply()
             endif
 
             " bind key mapping
-            if mapcheck('<leader>fc','n') != ""
+            if maparg('<leader>fc','n') != ""
                 nunmap <leader>fc
             endif
             nnoremap <unique> <leader>fc :NERDTreeFind<CR>
 
             if has('gui_running') "  the <alt> key is only available in gui mode.
                 if has ('mac')
-                    if mapcheck('Ø','n') != ""
+                    if maparg('Ø','n') != ""
                         nunmap Ø
                     endif
                     nnoremap <unique> Ø :NERDTreeFind<CR>:redraw<CR>/
                 else
-                    if mapcheck('<M-O>','n') != ""
+                    if maparg('<M-O>','n') != ""
                         nunmap <M-O>
                     endif
                     nnoremap <unique> <M-O> :NERDTreeFind<CR>:redraw<CR>/
@@ -643,6 +671,8 @@ let s:default_id_file_filter = [
             \ 'xml', 'mms', 'glm',
             \ 'json',
             \ 'l', 'lex', 'y', 'yacc',
+    \ 'hrl', 'erl',
+    \ 'php',
             \ ]
 
 function exconfig#gen_sh_update_idutils(path)
