@@ -946,12 +946,11 @@ func UpdateFilelist()
         let path = './.exvim.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-filelist'.suffix
-    let s:filetermbuf = term_start(termcmd, {
-                \ 'hidden': g:ex_update_term_hidden,
+    let s:filetermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('UpdateTags')
                 \ })
-    if s:filetermbuf == 0
+    if s:filetermbuf == ''
         echoerr 'Failed to open the update '.a:termcmd.' terminal window'
     endif
 endfunc
@@ -965,12 +964,11 @@ func UpdateTags(job, exit_code)
         let path = './.exvim.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-tags'.suffix
-    let s:tagtermbuf = term_start(termcmd, {
-                \ 'hidden': g:ex_update_term_hidden,
+    let s:tagtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('UpdateSymbols')
                 \ })
-    if s:tagtermbuf == 0
+    if s:tagtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
@@ -984,12 +982,11 @@ func UpdateSymbols(job, exit_code)
         let path = './.exvim.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-symbols'.suffix
-    let s:symtermbuf = term_start(termcmd, {
-                \ 'hidden': g:ex_update_term_hidden,
+    let s:symtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('UpdateInherits')
                 \ })
-    if s:symtermbuf == 0
+    if s:symtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
@@ -1003,12 +1000,11 @@ func UpdateInherits(job, exit_code)
         let path = './.exvim.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-inherits'.suffix
-    let s:inhtermbuf = term_start(termcmd, {
-                \ 'hidden': g:ex_update_term_hidden,
+    let s:inhtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('UpdateIdutils')
                 \ })
-    if s:inhtermbuf == 0
+    if s:inhtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
@@ -1022,12 +1018,11 @@ func UpdateIdutils(job, exit_code)
         let path = './.exvim.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-idutils'.suffix
-    let s:idtermbuf = term_start(termcmd, {
-                \ 'hidden': g:ex_update_term_hidden,
+    let s:idtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('UpdateCscope')
                 \ })
-    if s:idtermbuf == 0
+    if s:idtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
@@ -1042,12 +1037,11 @@ func UpdateCscope(job, exit_code)
         let path = './.exvim.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-cscope'.suffix
-    let s:cstermbuf = term_start(termcmd, {
-                \ 'hidden': g:ex_update_term_hidden,
+    let s:cstermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('s:UpdateFinish')
                 \ })
-    if s:cstermbuf == 0
+    if s:cstermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
