@@ -2,6 +2,28 @@ let s:old_titlestring=&titlestring
 let s:old_tagrelative=&tagrelative
 let s:old_tags=&tags
 
+if has('win32')
+    let s:msg_cb = 'out_cb'
+else
+    let s:msg_cb = 'err_cb'
+endif
+
+if !exists('g:ex_update_silent')
+    let g:ex_update_silent = 1
+endif
+
+if !exists('g:ex_update_term_hidden')
+    let g:ex_update_term_hidden = 1
+endif
+
+if !exists('g:ex_update_async')
+    let g:ex_update_async = 1
+endif
+
+if !exists('g:ex_update_bwipe')
+    let g:ex_update_bwipe = 1
+endif
+
 " exconfig#apply_project_type {{{
 function exconfig#apply_project_type()
 endfunction
@@ -324,8 +346,8 @@ function exconfig#apply()
     endif
 
     " run customized scripts
-    if exists('*g:exvim_post_init')
-        call g:exvim_post_init()
+    if exists('*g:Exvim_post_init')
+        call g:Exvim_post_init()
     endif
 endfunction
 
@@ -844,6 +866,15 @@ endfunction
 
 " exconfig#update_exvim_files {{{
 function exconfig#update_exvim_files()
+
+    if g:ex_update_async == 1
+        " exec 'term ++hidden ++close '.termcmd
+        call ex#hint('exVim Updating...')
+
+        call UpdateFilelist()
+        return
+    endif
+
     if ex#os#is('windows')
         let shell_exec = 'call'
         let shell_and = ' & '
@@ -896,15 +927,151 @@ function exconfig#update_exvim_files()
     endif
 
     let cmd .= shell_pause
+
     call ex#hint('exVim Updating...')
     exec '!' . cmd
-
     if vimentry#check('enable_cscope','true')
         call excscope#connect()
     endif
-
     call ex#hint('exVim Update Finish!')
+
 endfunction
+
+func UpdateFilelist()
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-filelist'.suffix
+    let s:filetermbuf = term_start(termcmd, {
+                \ 'hidden': g:ex_update_term_hidden,
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('UpdateTags')
+                \ })
+    if s:filetermbuf == 0
+        echoerr 'Failed to open the update '.a:termcmd.' terminal window'
+    endif
+endfunc
+
+func UpdateTags(job, exit_code)
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-tags'.suffix
+    let s:tagtermbuf = term_start(termcmd, {
+                \ 'hidden': g:ex_update_term_hidden,
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('UpdateSymbols')
+                \ })
+    if s:tagtermbuf == 0
+        echoerr 'Failed to open the update '.termcmd.' terminal window'
+    endif
+endfunc
+
+func UpdateSymbols(job, exit_code)
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-symbols'.suffix
+    let s:symtermbuf = term_start(termcmd, {
+                \ 'hidden': g:ex_update_term_hidden,
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('UpdateInherits')
+                \ })
+    if s:symtermbuf == 0
+        echoerr 'Failed to open the update '.termcmd.' terminal window'
+    endif
+endfunc
+
+func UpdateInherits(job, exit_code)
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-inherits'.suffix
+    let s:inhtermbuf = term_start(termcmd, {
+                \ 'hidden': g:ex_update_term_hidden,
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('UpdateIdutils')
+                \ })
+    if s:inhtermbuf == 0
+        echoerr 'Failed to open the update '.termcmd.' terminal window'
+    endif
+endfunc
+
+func UpdateIdutils(job, exit_code)
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-idutils'.suffix
+    let s:idtermbuf = term_start(termcmd, {
+                \ 'hidden': g:ex_update_term_hidden,
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('UpdateCscope')
+                \ })
+    if s:idtermbuf == 0
+        echoerr 'Failed to open the update '.termcmd.' terminal window'
+    endif
+endfunc
+
+func UpdateCscope(job, exit_code)
+    call excscope#kill()
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-cscope'.suffix
+    let s:cstermbuf = term_start(termcmd, {
+                \ 'hidden': g:ex_update_term_hidden,
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('s:UpdateFinish')
+                \ })
+    if s:cstermbuf == 0
+        echoerr 'Failed to open the update '.termcmd.' terminal window'
+    endif
+endfunc
+
+func s:UpdateOutput(chan, msg)
+    if g:ex_update_silent != 1
+        echomsg a:msg
+    endif
+endfunc
+
+func s:UpdateFinish(job, exit_code)
+    if g:ex_update_bwipe == 1
+        exe 'bwipe! ' . s:filetermbuf
+        exe 'bwipe! ' . s:tagtermbuf
+        exe 'bwipe! ' . s:symtermbuf
+        exe 'bwipe! ' . s:inhtermbuf
+        exe 'bwipe! ' . s:idtermbuf
+        exe 'bwipe! ' . s:cstermbuf
+    endif
+    if vimentry#check('enable_cscope','true')
+        call excscope#connect()
+    endif
+    call ex#hint('exVim Update Finish!')
+endfunc
 
 
 

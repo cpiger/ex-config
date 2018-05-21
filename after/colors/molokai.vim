@@ -22,19 +22,24 @@ if &background == "dark"
 
     hi clear EX_HL_cursorhl
     hi EX_HL_cursorhl gui=none guibg=darkgray term=none cterm=none ctermbg=darkgray
-
     hi clear EX_HL_label1
-    " hi EX_HL_label1 gui=none guibg=lightblue term=none cterm=none ctermbg=lightblue
-    hi EX_HL_label1 gui=none guifg=black guibg=lightblue term=none cterm=none ctermbg=lightblue
-    
+    hi EX_HL_label1 gui=none   guifg=black  guibg=lightblue     term=none cterm=none ctermbg=lightblue
     hi clear EX_HL_label2
-    hi EX_HL_label2 gui=none guifg=black guibg=lightmagenta term=none cterm=none ctermbg=darkmagenta
-
+    hi EX_HL_label2 gui=none   guifg=black  guibg=lightmagenta  term=none cterm=none ctermbg=darkmagenta
     hi clear EX_HL_label3
-    hi EX_HL_label3 gui=none  guifg=black guibg=darkyellow term=none cterm=none ctermbg=darkyellow
-
+    hi EX_HL_label3 gui=none   guifg=black  guibg=darkyellow    term=none cterm=none ctermbg=darkyellow
     hi clear EX_HL_label4
-    hi EX_HL_label4 gui=none guifg=black guibg=darkgreen term=none cterm=none ctermbg=darkgreen
+    hi EX_HL_label4 gui=none   guifg=black  guibg=darkgreen     term=none cterm=none ctermbg=darkgreen
+    hi clear EX_HL_label5
+    hi  EX_HL_label5 gui=none  guifg=black  guibg=DarkCyan      term=none cterm=none ctermbg=DarkCyan  
+    hi clear EX_HL_label6                 
+    hi  EX_HL_label6 gui=none  guifg=black  guibg=Magenta       term=none cterm=none ctermbg=Magenta   
+    hi clear EX_HL_label7                 
+    hi  EX_HL_label7 gui=none  guifg=black  guibg=Brown         term=none cterm=none ctermbg=Brown     
+    hi clear EX_HL_label8                 
+    hi  EX_HL_label8 gui=none  guifg=black  guibg=Green         term=none cterm=none ctermbg=Green     
+    hi clear EX_HL_label9
+    hi  EX_HL_label9 gui=none  guifg=black  guibg=Red           term=none cterm=none ctermbg=Red       
 
     " ex-showmarks highlight
     " =============================
@@ -91,19 +96,25 @@ else
     " =============================
 
     hi clear EX_HL_cursorhl
-    hi EX_HL_cursorhl gui=none guibg=White term=none cterm=none ctermbg=white 
-
+    hi EX_HL_cursorhl gui=none guibg=darkgray term=none cterm=none ctermbg=darkgray
     hi clear EX_HL_label1
-    hi EX_HL_label1 gui=none guibg=lightcyan term=none cterm=none ctermbg=lightcyan
-
+    hi EX_HL_label1 gui=none   guifg=black  guibg=lightblue     term=none cterm=none ctermbg=lightblue
     hi clear EX_HL_label2
-    hi EX_HL_label2 gui=none guibg=lightmagenta term=none cterm=none ctermbg=lightmagenta
-
+    hi EX_HL_label2 gui=none   guifg=black  guibg=lightmagenta  term=none cterm=none ctermbg=darkmagenta
     hi clear EX_HL_label3
-    hi EX_HL_label3 gui=none guibg=lightred term=none cterm=none ctermbg=lightred
-
+    hi EX_HL_label3 gui=none   guifg=black  guibg=darkyellow    term=none cterm=none ctermbg=darkyellow
     hi clear EX_HL_label4
-    hi EX_HL_label4 gui=none guibg=lightgreen term=none cterm=none ctermbg=lightgreen
+    hi EX_HL_label4 gui=none   guifg=black  guibg=darkgreen     term=none cterm=none ctermbg=darkgreen
+    hi clear EX_HL_label5
+    hi  EX_HL_label5 gui=none  guifg=black  guibg=DarkCyan      term=none cterm=none ctermbg=DarkCyan  
+    hi clear EX_HL_label6                 
+    hi  EX_HL_label6 gui=none  guifg=black  guibg=Magenta       term=none cterm=none ctermbg=Magenta   
+    hi clear EX_HL_label7                 
+    hi  EX_HL_label7 gui=none  guifg=black  guibg=Brown         term=none cterm=none ctermbg=Brown     
+    hi clear EX_HL_label8                 
+    hi  EX_HL_label8 gui=none  guifg=black  guibg=Green         term=none cterm=none ctermbg=Green     
+    hi clear EX_HL_label9
+    hi  EX_HL_label9 gui=none  guifg=black  guibg=Red           term=none cterm=none ctermbg=Red       
 
     " ex-showmarks highlight
     " =============================
