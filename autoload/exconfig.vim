@@ -8,13 +8,7 @@ else
     let s:msg_cb = 'err_cb'
 endif
 
-if !exists('g:ex_update_silent')
-    let g:ex_update_silent = 1
-endif
-
-if !exists('g:ex_update_term_hidden')
-    let g:ex_update_term_hidden = 1
-endif
+let s:ex_update_silent = 1
 
 if !exists('g:ex_update_async')
     let g:ex_update_async = 1
@@ -865,7 +859,13 @@ function exconfig#gen_sh_update_idutils(path)
 endfunction
 
 " exconfig#update_exvim_files {{{
-function exconfig#update_exvim_files()
+function exconfig#update_exvim_files(args)
+
+    if a:args == 0
+        let s:ex_update_silent = 0
+    else
+        let s:ex_update_silent = 1
+    endif
 
     if g:ex_update_async == 1
         " exec 'term ++hidden ++close '.termcmd
@@ -1047,7 +1047,7 @@ func UpdateCscope(job, exit_code)
 endfunc
 
 func s:UpdateOutput(chan, msg)
-    if g:ex_update_silent != 1
+    if  s:ex_update_silent == 0
         echomsg a:msg
     endif
 endfunc
