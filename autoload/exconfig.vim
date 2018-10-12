@@ -948,14 +948,15 @@ func UpdateFilelist()
     let termcmd = path.'update-filelist'.suffix
     let s:filetermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
-                \ 'exit_cb':function('UpdateTags')
+                \ 'exit_cb':function('s:UpdateTags')
                 \ })
     if s:filetermbuf == ''
         echoerr 'Failed to open the update '.a:termcmd.' terminal window'
     endif
 endfunc
 
-func UpdateTags(job, exit_code)
+func s:UpdateTags(job, exit_code)
+    call s:UpdateFilelistFinish()
     if ex#os#is('windows')
         let suffix = '.bat'
         let path = '.\.exvim.'.g:exvim_project_name.'\'
@@ -966,14 +967,40 @@ func UpdateTags(job, exit_code)
     let termcmd = path.'update-tags'.suffix
     let s:tagtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
-                \ 'exit_cb':function('UpdateSymbols')
+                \ 'exit_cb':function('s:UpdateOthers')
                 \ })
     if s:tagtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
 
-func UpdateSymbols(job, exit_code)
+func UpdateTags()
+    if ex#os#is('windows')
+        let suffix = '.bat'
+        let path = '.\.exvim.'.g:exvim_project_name.'\'
+    else
+        let suffix = '.sh'
+        let path = './.exvim.'.g:exvim_project_name.'/'
+    endif
+    let termcmd = path.'update-tags'.suffix
+    let s:tagtermbuf = job_start(termcmd, {
+                \  s:msg_cb : function('s:UpdateOutput'),
+                \ 'exit_cb':function('s:UpdateTagsFinish')
+                \ })
+    if s:tagtermbuf == ''
+        echoerr 'Failed to open the update '.termcmd.' terminal window'
+    endif
+endfunc
+
+func s:UpdateOthers(job, exit_code)
+    call s:UpdateTagsFinish()
+    call UpdateSymbols()
+    call UpdateInherits()
+    call UpdateIdutils()
+    call UpdateCscope()
+endf
+
+func UpdateSymbols()
     if ex#os#is('windows')
         let suffix = '.bat'
         let path = '.\.exvim.'.g:exvim_project_name.'\'
@@ -984,14 +1011,14 @@ func UpdateSymbols(job, exit_code)
     let termcmd = path.'update-symbols'.suffix
     let s:symtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
-                \ 'exit_cb':function('UpdateInherits')
+                \ 'exit_cb':function('s:UpdateSymbolsFinish')
                 \ })
     if s:symtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
 
-func UpdateInherits(job, exit_code)
+func UpdateInherits()
     if ex#os#is('windows')
         let suffix = '.bat'
         let path = '.\.exvim.'.g:exvim_project_name.'\'
@@ -1002,14 +1029,14 @@ func UpdateInherits(job, exit_code)
     let termcmd = path.'update-inherits'.suffix
     let s:inhtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
-                \ 'exit_cb':function('UpdateIdutils')
+                \ 'exit_cb':function('s:UpdateInheritsFinish')
                 \ })
     if s:inhtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
 
-func UpdateIdutils(job, exit_code)
+func UpdateIdutils()
     if ex#os#is('windows')
         let suffix = '.bat'
         let path = '.\.exvim.'.g:exvim_project_name.'\'
@@ -1020,14 +1047,14 @@ func UpdateIdutils(job, exit_code)
     let termcmd = path.'update-idutils'.suffix
     let s:idtermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
-                \ 'exit_cb':function('UpdateCscope')
+                \ 'exit_cb':function('s:UpdateIdutilsFinish')
                 \ })
     if s:idtermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
     endif
 endfunc
 
-func UpdateCscope(job, exit_code)
+func UpdateCscope()
     call excscope#kill()
     if ex#os#is('windows')
         let suffix = '.bat'
@@ -1039,7 +1066,7 @@ func UpdateCscope(job, exit_code)
     let termcmd = path.'update-cscope'.suffix
     let s:cstermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
-                \ 'exit_cb':function('s:UpdateFinish')
+                \ 'exit_cb':function('s:UpdateCscopeFinish')
                 \ })
     if s:cstermbuf == ''
         echoerr 'Failed to open the update '.termcmd.' terminal window'
@@ -1052,20 +1079,51 @@ func s:UpdateOutput(chan, msg)
     endif
 endfunc
 
-func s:UpdateFinish(job, exit_code)
+func s:UpdateFilelistFinish()
     if g:ex_update_bwipe == 1
         exe 'bwipe! ' . s:filetermbuf
+    endif
+    call ex#hint('exVim Update Filelist Finish!')
+endfunc
+
+func s:UpdateTagsFinish()
+    if g:ex_update_bwipe == 1
         exe 'bwipe! ' . s:tagtermbuf
+    endif
+    call ex#hint('exVim Update Tags Finish!')
+endfunc
+
+func s:UpdateSymbolsFinish(job, exit_code)
+    if g:ex_update_bwipe == 1
         exe 'bwipe! ' . s:symtermbuf
-        exe 'bwipe! ' . s:inhtermbuf
-        exe 'bwipe! ' . s:idtermbuf
-        exe 'bwipe! ' . s:cstermbuf
     endif
-    if vimentry#check('enable_cscope','true')
-        call excscope#connect()
-    endif
+    call ex#hint('exVim Update Symbols Finish!')
     call ex#hint('exVim Update Finish!')
 endfunc
 
+func s:UpdateInheritsFinish(job, exit_code)
+    if g:ex_update_bwipe == 1
+        exe 'bwipe! ' . s:inhtermbuf
+    endif
+    call ex#hint('exVim Update Inherits Finish!')
+endfunc
 
+func s:UpdateIdutilsFinish(job, exit_code)
+    if g:ex_update_bwipe == 1
+        exe 'bwipe! ' . s:idtermbuf
+    endif
+    call ex#hint('exVim Update Idutils Finish!')
+    call ex#hint('exVim Update Finish!')
+endfunc
 
+func s:UpdateCscopeFinish(job, exit_code)
+    if g:ex_update_bwipe == 1
+        exe 'bwipe! ' . s:cstermbuf
+    endif
+
+    if vimentry#check('enable_cscope','true')
+        call excscope#connect()
+    endif
+
+    call ex#hint('exVim Update Cscope Finish!')
+endfunc
