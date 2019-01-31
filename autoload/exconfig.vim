@@ -1182,7 +1182,6 @@ func s:UpdateCscopeFinish(job, exit_code)
 
     if vimentry#check('enable_cscope','true')
         if cscope_engine == 'gtags'
-            echon "GtagsCscope"
             silent exec 'GtagsCscope'
         else
             call excscope#connect()
