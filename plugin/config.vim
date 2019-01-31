@@ -1,4 +1,8 @@
 " variables {{{
+
+if !exists('g:ex_dir_prefix')
+    g:ex_dir_prefix = 'exvim'
+endif
 if !exists('g:ex_todo_keyword')
     let g:ex_todo_keyword = '
                 \ NOTE

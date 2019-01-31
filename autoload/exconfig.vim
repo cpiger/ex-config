@@ -67,7 +67,7 @@ function exconfig#apply()
 
     let g:exvim_project_name = project_name
     let g:exvim_project_root = cwd
-    let g:exvim_folder = './.exvim.'.project_name
+    let g:exvim_folder = './'.g:ex_dir_prefix.'.'.project_name
 
     " set parent working directory
     silent exec 'cd ' . fnameescape(cwd)
@@ -149,9 +149,14 @@ function exconfig#apply()
 
     " set cscope file path
     if vimentry#check('enable_cscope', 'true')
-        call excscope#set_csfile(g:exvim_folder.'/cscope.out')
-        call exconfig#gen_sh_update_cscope(g:exvim_folder)
-        call excscope#connect()
+        let cscope_engine = vimentry#get('cscope_engine')
+        if cscope_engine == 'gtags'
+            call exconfig#gen_sh_update_gtags(g:exvim_folder)
+        else
+            call excscope#set_csfile(g:exvim_folder.'/cscope.out')
+            call exconfig#gen_sh_update_cscope(g:exvim_folder)
+            call excscope#connect()
+        endif
     endif
 
     " macro highlight
@@ -546,6 +551,53 @@ endfunction
 " echo "  |- done!"
 " --------------------------------------------------
 
+" exconfig#gen_sh_update_gtags{{{
+function exconfig#gen_sh_update_gtags(path)
+    " get gtags cmd
+    let gtags_cmd = 'gtags'
+    if executable('gtags')
+        let gtags_cmd = 'gtags'
+    else
+        call ex#warning("Can't find gtags command in your system. Please install it first!")
+    endif
+
+    " get gtags options
+    let gtags_optioins = ' '
+
+    " generate scripts
+    if ex#os#is('windows')
+        let fullpath = a:path . '/update-gtags.bat'
+        let winpath = ex#path#translate(a:path,'windows')
+        let wintoolpath = ex#path#translate(g:ex_tools_path,'windows')
+        let wintoolpath = expand(wintoolpath)
+        let scripts = [
+                    \ '@echo off'                                  ,
+                    \ 'set DEST='.winpath                          ,
+                    \ 'set TOOLS='.wintoolpath                     ,
+                    \ 'set GTAGS_CMD='.gtags_cmd                   ,
+                    \ 'set OPTIONS='.gtags_optioins                ,
+                    \ 'set TMP=%DEST%\GTAGS'                       ,
+                    \ 'set TARGET=GTAGS'                           ,
+                    \ 'call %TOOLS%\shell\batch\update-gtags.bat'  ,
+                    \ ]
+    else
+        let fullpath = a:path . '/update-gtags.sh'
+        let scripts = [
+                    \ '#!/bin/bash'                                ,
+                    \ 'export DEST="'.a:path.'"'                   ,
+                    \ 'export TOOLS="'.expand(g:ex_tools_path).'"' ,
+                    \ 'export GTAGS_CMD="'.gtags_cmd.'"'         ,
+                    \ 'export OPTIONS="'.gtags_optioins.'"'        ,
+                    \ 'export TMP="${DEST}/GTAGS"'           ,
+                    \ 'export TARGET="GTAGS"'               ,
+                    \ 'sh ${TOOLS}/shell/bash/update-gtags.sh'    ,
+                    \ ]
+    endif
+
+    " save to file
+    call writefile ( scripts, fullpath )
+endfunction
+
 " exconfig#gen_sh_update_cscope {{{
 function exconfig#gen_sh_update_cscope(path)
     " get cscope cmd
@@ -880,13 +932,13 @@ function exconfig#update_exvim_files(args)
         let shell_and = ' & '
         let shell_pause = ' && pause'
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let shell_exec = 'sh'
         let shell_and = ' && '
         let shell_pause = ''
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
 
     let cmd = ''
@@ -940,10 +992,10 @@ endfunction
 func UpdateFilelist()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-filelist'.suffix
     let s:filetermbuf = job_start(termcmd, {
@@ -959,10 +1011,10 @@ func s:UpdateTags(job, exit_code)
     call s:UpdateFilelistFinish()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-tags'.suffix
     let s:tagtermbuf = job_start(termcmd, {
@@ -977,10 +1029,10 @@ endfunc
 func UpdateTags()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-tags'.suffix
     let s:tagtermbuf = job_start(termcmd, {
@@ -1003,10 +1055,10 @@ endf
 func UpdateSymbols()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-symbols'.suffix
     let s:symtermbuf = job_start(termcmd, {
@@ -1021,10 +1073,10 @@ endfunc
 func UpdateInherits()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-inherits'.suffix
     let s:inhtermbuf = job_start(termcmd, {
@@ -1039,10 +1091,10 @@ endfunc
 func UpdateIdutils()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
     let termcmd = path.'update-idutils'.suffix
     let s:idtermbuf = job_start(termcmd, {
@@ -1058,12 +1110,17 @@ func UpdateCscope()
     call excscope#kill()
     if ex#os#is('windows')
         let suffix = '.bat'
-        let path = '.\.exvim.'.g:exvim_project_name.'\'
+        let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
     else
         let suffix = '.sh'
-        let path = './.exvim.'.g:exvim_project_name.'/'
+        let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
-    let termcmd = path.'update-cscope'.suffix
+    let cscope_engine = vimentry#get('cscope_engine')
+    if cscope_engine == 'gtags'
+        let termcmd = path.'update-gtags'.suffix
+    else
+        let termcmd = path.'update-cscope'.suffix
+    endif
     let s:cstermbuf = job_start(termcmd, {
                 \  s:msg_cb : function('s:UpdateOutput'),
                 \ 'exit_cb':function('s:UpdateCscopeFinish')
@@ -1121,9 +1178,20 @@ func s:UpdateCscopeFinish(job, exit_code)
         exe 'bwipe! ' . s:cstermbuf
     endif
 
+    let cscope_engine = vimentry#get('cscope_engine')
+
     if vimentry#check('enable_cscope','true')
-        call excscope#connect()
+        if cscope_engine == 'gtags'
+            echon "GtagsCscope"
+            silent exec 'GtagsCscope'
+        else
+            call excscope#connect()
+        endif
     endif
 
-    call ex#hint('exVim Update Cscope Finish!')
+    if cscope_engine == 'gtags'
+        call ex#hint('exVim Update Gtags Finish!')
+    else
+        call ex#hint('exVim Update Cscope Finish!')
+    endif
 endfunc
