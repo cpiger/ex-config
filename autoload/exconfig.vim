@@ -972,10 +972,17 @@ function exconfig#update_exvim_files(args)
 
     " update cscope
     if vimentry#check('enable_cscope','true')
-        call excscope#kill()
-        let cmd .= and
-        let cmd .= shell_exec . ' ' . path.'update-cscope'.suffix
-        let and = shell_and
+        let cscope_engine = vimentry#get('cscope_engine')
+        if cscope_engine == 'gtags'
+            let cmd .= and
+            let cmd .= shell_exec . ' ' . path.'update-gtags'.suffix
+            let and = shell_and
+        else
+            call excscope#kill()
+            let cmd .= and
+            let cmd .= shell_exec . ' ' . path.'update-cscope'.suffix
+            let and = shell_and
+        endif
     endif
 
     let cmd .= shell_pause
@@ -983,7 +990,11 @@ function exconfig#update_exvim_files(args)
     call ex#hint('exVim Updating...')
     exec '!' . cmd
     if vimentry#check('enable_cscope','true')
-        call excscope#connect()
+        if cscope_engine == 'gtags'
+            silent exec 'GtagsCscope'
+        else
+            call excscope#connect()
+        endif
     endif
     call ex#hint('exVim Update Finish!')
 
@@ -1107,7 +1118,10 @@ func UpdateIdutils()
 endfunc
 
 func UpdateCscope()
-    call excscope#kill()
+    let cscope_engine = vimentry#get('cscope_engine')
+    if cscope_engine == 'cscope'
+        call excscope#kill()
+    endif
     if ex#os#is('windows')
         let suffix = '.bat'
         let path = '.\'.g:ex_dir_prefix.'.'.g:exvim_project_name.'\'
@@ -1115,7 +1129,6 @@ func UpdateCscope()
         let suffix = '.sh'
         let path = './'.g:ex_dir_prefix.'.'.g:exvim_project_name.'/'
     endif
-    let cscope_engine = vimentry#get('cscope_engine')
     if cscope_engine == 'gtags'
         let termcmd = path.'update-gtags'.suffix
     else
