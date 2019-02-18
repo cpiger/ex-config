@@ -161,7 +161,13 @@ function exconfig#apply()
 
     " macro highlight
     if vimentry#check('enable_macrohl', 'true')
-        " TODO: silent call g:exMH_InitMacroList(g:exES_Macro)
+        " TODO: silent call g:exMH_InitMacroList(g:exmacrohl_filename)
+        let s:ex_macrohl_file = g:exvim_folder.'/'.g:exmacrohl_filename
+        call exmacrohl#set_file(s:ex_macrohl_file)
+        if filereadable(s:ex_macrohl_file) == 0
+            call writefile([], s:ex_macrohl_file)
+        endif
+        call exmacrohl#initlist()
     endif
 
     " buffer restore
